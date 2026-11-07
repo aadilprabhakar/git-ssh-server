@@ -61,7 +61,7 @@ Repos can sit in subfolders, such as `ssh://git@<server>:2222/home/notes.git`.
 ./test/run.sh
 ```
 
-This builds the image and starts a throwaway server and client in Docker volumes. It then checks 27 things, including that the read-only key can't push, that no key gets a shell, a password sign-in or a path outside the repos, and that repos and the host key survive a restart. The test makes its own throwaway keys inside the client container and deletes everything afterwards.
+This builds the image and starts a throwaway server and client in Docker volumes. It then checks 28 things, including that the read-only key can't push, that no key gets a shell, a password sign-in or a path outside the repos, and that repos and the host key survive a restart. The test makes its own throwaway keys inside the client container and deletes everything afterwards.
 
 ## Unraid
 

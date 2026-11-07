@@ -19,7 +19,10 @@ RUN addgroup -g "${GIT_GID}" git \
  && sed -i -E 's/^(git|git-ro):!:/\1:*:/' /etc/shadow
 
 COPY rootfs/ /
-RUN chmod 0755 /usr/local/bin/git-access /usr/local/bin/new-repo /usr/local/bin/entrypoint \
+# COPY keeps the build folder's modes. A checkout made with umask 002 (as on Unraid) leaves /etc
+# group-writable, and sshd then refuses every key. Strip group and world write from what was copied.
+RUN find /etc /usr/local ! -type l \( -perm -020 -o -perm -002 \) -exec chmod go-w {} + \
+ && chmod 0755 /usr/local/bin/git-access /usr/local/bin/new-repo /usr/local/bin/entrypoint \
  && chmod 0644 /etc/ssh/sshd_config /etc/gitconfig
 
 EXPOSE 2222

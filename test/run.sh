@@ -6,10 +6,12 @@ set -eu
 cd "$(dirname "$0")/.."
 
 C="docker compose -p git-ssh-test -f compose.yaml -f test/compose.test.yaml"
-cleanup() { $C down -v --remove-orphans >/dev/null 2>&1 || true; }
+cleanup() { chmod -R g-w rootfs; $C down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap cleanup EXIT INT TERM
 cleanup
 
+# Build from a group-writable copy, as a checkout made with umask 002 would be; the image must still work.
+chmod -R g+w rootfs
 $C up -d --build --quiet-pull >/dev/null
 $C exec -T client sh -c '
   apk add -q --no-cache git openssh-client >/dev/null
@@ -62,6 +64,7 @@ check() { if [ "$1" = "$2" ]; then srv_pass=$((srv_pass+1)); echo "PASS  $3"; el
 check "$($C exec -T -u git-ro git-ssh sh -c 'touch /srv/git/demo.git/x 2>/dev/null && echo yes || echo no')" no "read account can't write repo files"
 check "$($C exec -T -u git-ro git-ssh sh -c 'ls /srv/git/demo.git >/dev/null 2>&1 && echo yes || echo no')" yes "read account can read repo files"
 check "$($C exec -T git-ssh sh -c 'touch /etc/x 2>/dev/null && echo yes || echo no')" no "system files are read-only"
+check "$($C exec -T git-ssh sh -c 'find /etc /usr/local ! -type l \( -perm -020 -o -perm -002 \)')" "" "system files not group- or world-writable"
 check "$($C exec -T git-ssh sh -c 'ls /var/run/docker.sock >/dev/null 2>&1 && echo yes || echo no')" no "no Docker socket inside"
 $C restart git-ssh >/dev/null
 sleep 2
