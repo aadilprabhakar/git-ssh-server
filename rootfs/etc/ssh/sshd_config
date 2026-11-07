@@ -1,0 +1,33 @@
+# Git over SSH only. Every login runs git-access, whatever the client asks for.
+Port 2222
+HostKey /etc/ssh/hostkeys/ssh_host_ed25519_key
+PidFile /run/sshd.pid
+LogLevel VERBOSE
+
+# Keys only, two accounts, no root.
+AllowUsers git git-ro
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+AuthorizedKeysFile /etc/git-ssh/keys/%u
+StrictModes yes
+MaxAuthTries 3
+LoginGraceTime 20
+
+# No shells, terminals, tunnels or forwarding.
+PermitTTY no
+PermitTunnel no
+PermitUserEnvironment no
+AllowTcpForwarding no
+AllowStreamLocalForwarding no
+AllowAgentForwarding no
+X11Forwarding no
+GatewayPorts no
+DisableForwarding yes
+
+Match User git
+    ForceCommand /usr/local/bin/git-access write
+Match User git-ro
+    ForceCommand /usr/local/bin/git-access read

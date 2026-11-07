@@ -1,0 +1,16 @@
+#!/bin/sh
+# Creates an empty bare repo. Run it as the git user:
+#   docker exec -u git git-ssh new-repo <name>
+set -eu
+umask 027
+name=${1:-}
+case "$name" in
+  ""|*..*|*//*|/*|*[!A-Za-z0-9._/-]*) echo "usage: new-repo <name>  (letters, digits, . _ - and /)" >&2; exit 2 ;;
+esac
+case "$name" in *.git) ;; *) name=$name.git ;; esac
+repo=/srv/git/$name
+[ ! -e "$repo" ] || { echo "already exists: $name" >&2; exit 1; }
+[ "$(id -un)" = git ] || { echo "run as the git user: docker exec -u git ..." >&2; exit 1; }
+mkdir -p "$(dirname "$repo")"
+git init -q --bare --initial-branch=main "$repo"
+echo "created $name"

@@ -1,0 +1,36 @@
+# Settings come from .env (copy .env.example). Real keys, repos and addresses stay out of git.
+services:
+  git-ssh:
+    build:
+      context: .
+      args:
+        GIT_UID: ${GIT_UID:-1000}
+        GIT_GID: ${GIT_GID:-1000}
+        RO_UID: ${RO_UID:-1001}
+    image: git-ssh-server:local
+    container_name: git-ssh
+    restart: unless-stopped
+    # Published on one address only. Add more in compose.override.yaml (see compose.override.example.yaml).
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${SSH_PORT:-2222}:2222"
+    volumes:
+      - ${REPOS_DIR:-./data/repos}:/srv/git
+      - ${HOSTKEYS_DIR:-./data/hostkeys}:/etc/ssh/hostkeys
+      - ${KEYS_DIR:-./keys}:/etc/git-ssh/keys:ro
+    # Least privilege: read-only system files, and only the capabilities sshd needs.
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN        # entrypoint: sets the owner of the repos folder
+      - FOWNER       # entrypoint: sets its mode
+      - SETUID       # sshd: switches to the signed-in account
+      - SETGID
+      - SYS_CHROOT   # sshd: privilege separation
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m

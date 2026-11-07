@@ -1,0 +1,40 @@
+#!/bin/sh
+# Runs for every SSH login (sshd ForceCommand). Allows only Git transfers, on existing repos under /srv/git.
+#   git-access write   for the git account: clone, fetch, push
+#   git-access read    for the git-ro account: clone, fetch
+set -eu
+umask 027
+
+mode=${1:-read}
+cmd=${SSH_ORIGINAL_COMMAND:-}
+deny() { echo "git-ssh: $1" >&2; exit 1; }
+
+[ -n "$cmd" ] || deny "no shell here: use git clone, fetch, pull or push"
+verb=${cmd%% *}
+arg=${cmd#* }
+[ "$verb" != "$cmd" ] || deny "only git clone, fetch, pull and push are allowed"
+
+case "$verb" in
+  git-upload-pack|git-upload-archive) ;;
+  git-receive-pack) [ "$mode" = write ] || deny "this key is read-only" ;;
+  *) deny "only git clone, fetch, pull and push are allowed" ;;
+esac
+
+# Git sends the path in single quotes, for example 'project.git' or '/project.git'.
+case "$arg" in
+  "'"*"'") path=${arg#\'}; path=${path%\'} ;;
+  *) deny "unexpected repository path" ;;
+esac
+case "$path" in
+  *"'"*|*..*|*//*|*[!A-Za-z0-9._/~-]*) deny "unsupported repository path" ;;
+esac
+path=${path#/}
+path=${path#\~/}
+path=${path#srv/git/}
+case "$path" in *.git) ;; *) path=$path.git ;; esac
+case "$path" in ""|.git|/*|*/.git) deny "unsupported repository path" ;; esac
+
+repo=/srv/git/$path
+[ -d "$repo" ] && [ -f "$repo/HEAD" ] || deny "no such repository: $path"
+
+exec git "${verb#git-}" "$repo"

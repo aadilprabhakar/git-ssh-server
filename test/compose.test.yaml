@@ -1,0 +1,21 @@
+# Test setup: everything in throwaway Docker volumes, nothing published, removed after the run.
+services:
+  git-ssh:
+    container_name: git-ssh-test
+    ports: !reset []
+    volumes:
+      - repos:/srv/git
+      - hostkeys:/etc/ssh/hostkeys
+      - authkeys:/etc/git-ssh/keys:ro
+  client:
+    image: alpine:3.24
+    entrypoint: ["sleep", "infinity"]
+    volumes:
+      - clientkeys:/keys
+      - authkeys:/auth
+
+volumes:
+  repos:
+  hostkeys:
+  authkeys:
+  clientkeys:

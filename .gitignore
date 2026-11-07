@@ -1,0 +1,49 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.jwt_secret
+credentials*.json
+*oauth_creds*
+
+# claude & agent files stay local, never pushed (also enforced by .githooks)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.claude.json
+.gemini/
+GEMINI.md
+GEMINI.local.md
+AGENTS.md
+AGENTS.local.md
+.agents/
+.agy/
+
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# deps / build
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+
+# backups
+backups/
+tmp/
+*.bak
+.mise/
+
+# this project: real keys and data stay local
+keys/*
+!keys/README.md
+data/
+compose.override.yaml

@@ -1,0 +1,7 @@
+# Copy to compose.override.yaml (gitignored) to publish on more than one address,
+# for example a LAN address and a Tailscale address. Use your own values.
+services:
+  git-ssh:
+    ports:
+      - "192.0.2.10:2222:2222"
+      - "100.64.0.10:2222:2222"

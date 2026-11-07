@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+# The server's own identity key, made once on first start and kept in its volume.
+# It identifies this server to clients; nobody signs in with it.
+key=/etc/ssh/hostkeys/ssh_host_ed25519_key
+if [ ! -f "$key" ]; then
+  ssh-keygen -q -t ed25519 -N '' -C git-ssh-host -f "$key"
+  echo "git-ssh: created host key $(ssh-keygen -lf "$key.pub" | cut -d' ' -f2)"
+fi
+
+# Only the top of the repos folder is fixed up; existing repos are left as they are.
+chown git:git /srv/git
+chmod 2750 /srv/git
+
+for user in git git-ro; do
+  [ -s "/etc/git-ssh/keys/$user" ] || echo "git-ssh: no keys for $user yet, so it can't sign in (add keys/$user)"
+done
+
+exec /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config

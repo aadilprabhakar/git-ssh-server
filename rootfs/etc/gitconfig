@@ -1,0 +1,8 @@
+[safe]
+	# git-ro reads repos owned by git. Without this, Git refuses them as "dubious ownership".
+	directory = /srv/git/*
+[receive]
+	# Reject corrupt or malformed objects on push.
+	fsckObjects = true
+[core]
+	sharedRepository = 0640
